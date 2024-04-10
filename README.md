@@ -1,8 +1,9 @@
-# NAME
+# reyes
+## NAME
 reyes - a follow you over webcam
 
-# DESCRIPTION
+## DESCRIPTION
 Reyes watches what you do and reports to the Boss.
 
-# OPTION
+## OPTION
 To change FOV, click eyes.
