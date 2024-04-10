@@ -87,7 +87,7 @@ class Eye{
 
 	drawErrIris(){
 		this.ctx.strokeStyle = COLOR_IRIS;
-		this.ctx.drawImage(cross,this.center.x-this.radius*REF_IRIS,this.center.y-this.radius*REF_IRIS,2*this.radius*REF_IRIS,2*this.radius*REF_IRIS*REF_ASPECT_SINGLE);
+		this.ctx.drawImage(Cross,this.center.x-this.radius*REF_IRIS,this.center.y-this.radius*REF_IRIS,2*this.radius*REF_IRIS,2*this.radius*REF_IRIS*REF_ASPECT_SINGLE);
 		return;
 	};
 
@@ -233,7 +233,10 @@ async function getStream(){
 }
 
 window.addEventListener("load", async ()=>{	
-	const cross = document.querySelector("#cross");
+	const load = document.querySelector("#load");
+	load.showModal();
+
+	const Cross = document.querySelector("#cross");
 
 	const video = document.createElement("video");
 	const stream = await getStream();
@@ -244,6 +247,10 @@ window.addEventListener("load", async ()=>{
 
 	const setting = stream.getTracks()[0].getSettings();
 	const cameraDimention = {width: setting.width, height: setting.height};
+
+	//const cameraAspect = setting.aspectRatio;
+	const diagonal = Math.sqrt(Math.pow(cameraDimention.width,2) + Math.pow(cameraDimention.height,2));
+	const cameraRatioToDiagonal = new Vector(cameraDimention.width/diagonal,cameraDimention.height/diagonal,);
 	
 	const canvas = document.createElement("canvas");
 
@@ -284,7 +291,7 @@ window.addEventListener("load", async ()=>{
 
 		}
 		else{	
-			const theta = getTheta(face, Fov,cameraDimention);
+			const theta = getTheta(face, Fov,cameraDimention, cameraRatioToDiagonal);
 			eyes.drawIrisAll(theta);
 			eyeInfo.theta = theta;
 		}
@@ -302,7 +309,7 @@ window.addEventListener("load", async ()=>{
 			}
 			else{
 				const face = faces[0];	
-				const theta = getTheta(face, Fov,cameraDimention);
+				const theta = getTheta(face, Fov,cameraDimention, cameraRatioToDiagonal);
 				eyes.drawIrisAll(theta);
 				eyeInfo.theta = theta;
 			}
@@ -327,7 +334,7 @@ window.addEventListener("load", async ()=>{
 		eyes.updateSizeAll();
 	});
 
-	const modal = document.querySelector("dialog");
+	const modal = document.querySelector("#setting");
 	const methods = document.getElementsByName("fov_method");
 
 	const fovInput = document.querySelector("#fov_input");
@@ -386,13 +393,15 @@ window.addEventListener("load", async ()=>{
 
 	});
 	
-	//window.requestAnimationFrame(draw_loop);
 	await delay(1000);
-	await draw_loop();
+	load.close();
+	window.requestAnimationFrame(draw_loop);
+	
+	//await draw_loop();
 
 });
 
-function getTheta(face,fov,cameraDimention){
+function getTheta(face,fov,cameraDimention,ratioToDiagonal){
 	let camdim = cameraDimention;
 	let vexc = face._box._x;
 	let veyc = face._box._y;
@@ -405,8 +414,8 @@ function getTheta(face,fov,cameraDimention){
 	let factor_x = (vex-(camdim.width/2))/(camdim.width/2);
 	let factor_y = (vey - (camdim.height/2))/(camdim.height/2);
 
-	let theta_x = -Math.atan(factor_x*Math.tan(fov));
-	let theta_y = Math.atan(factor_y*Math.tan(fov));
+	let theta_x = -Math.atan(factor_x*Math.tan(fov)*ratioToDiagonal.x);
+	let theta_y = Math.atan(factor_y*Math.tan(fov)*ratioToDiagonal.y);
 
 	return {x: theta_x, y:theta_y};
 }
