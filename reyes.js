@@ -285,7 +285,11 @@ window.addEventListener("load", async ()=>{
 	async function draw_loop(timeStamp){	
 
 		const face = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
-		eyes.clearIrisAll();
+
+		clear_canvas(ctx, canvas);
+		eyes.drawEyeBallAll();
+		//eyes.clearIrisAll();
+		
 		if(face == undefined){
 			eyes.drawIrisAll(eyeInfo.theta);
 
