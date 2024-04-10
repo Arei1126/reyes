@@ -1,5 +1,29 @@
 `use strict`
 
+// FOVとは、半分でない方の角度のこと
+const AZ_FOV = 0.6561787179913949/2;
+const DEFAULT_FOV = 0.2914567944778674;  
+
+const COLOR_IRIS = "#000000";
+const COLOR_WHITE = "#FFFFFF";
+const COLOR_LINE = "#000000";
+const COLOR_BG = "#CCCCCC";
+
+//　だまし絵的にどこから見ても見かけ上の虹彩の大きさが一定になるように補正する
+const TRICK_ART_CORRECTION = false;
+
+
+const RADIUS_WHITE = 100;
+
+const REF_ASPECT_SINGLE = 4/3;
+const REF_WHITE = 16/19;
+const REF_IRIS = 3/16;
+const REF_ASPECT_WINDOW = 2/3;
+
+const REF_CANVAS_TO_SINGLE = 19/40;
+const REF_CANVAS_TO_DISTANCE = 2/40;
+
+
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
@@ -41,8 +65,14 @@ class Eye{
 		let x = (this.radius*Math.sin(this.theta.x)) + this.center.x;
 		let y = (this.radius*Math.sin(this.theta.y)) + this.center.y;
 
-		let strech_x = 1/Math.cos(this.theta.x);
-		let strech_y = 1/Math.cos(this.theta.y);
+		let strech_x = 1;
+		let strech_y = 1;
+		if(TRICK_ART_CORRECTION){
+			strech_x = 1/Math.cos(this.theta.x);
+			strech_y = 1/Math.cos(this.theta.y);
+		}
+
+
 		this.ctx.fillStyle = COLOR_IRIS;
 
 		this.ctx.beginPath();
@@ -59,13 +89,6 @@ class Eye{
 		this.ctx.strokeStyle = COLOR_IRIS;
 		this.ctx.drawImage(cross,this.center.x-this.radius*REF_IRIS,this.center.y-this.radius*REF_IRIS,2*this.radius*REF_IRIS,2*this.radius*REF_IRIS*REF_ASPECT_SINGLE);
 		return;
-		/*
-		this.ctx.font=`${this.radius*REF_IRIS}px serif`;
-		this.textAlign = "center";
-		this.textBaseline = 'middle';
-		this.ctx.fillText("の",this.center.x,this.center.y);
-		*/
-
 	};
 
 	clearIris(){	
@@ -154,25 +177,6 @@ function clear_canvas(ctx,canvas){
 }
 
 
-const AZ_FOV = 0.6561787179913949/2;
-
-const DEFAULT_FOV = 0.2914567944778674;  // 半分でrad
-const COLOR_IRIS = "#000000";
-const COLOR_WHITE = "#FFFFFF";
-const COLOR_LINE = "#000000";
-const COLOR_BG = "#CCCCCC";
-
-
-const RADIUS_WHITE = 100;
-
-const REF_ASPECT_SINGLE = 4/3;
-const REF_WHITE = 16/19;
-const REF_IRIS = 3/16;
-const REF_ASPECT_WINDOW = 2/3;
-
-const REF_CANVAS_TO_SINGLE = 19/40;
-const REF_CANVAS_TO_DISTANCE = 2/40;
-
 
 
 
@@ -260,7 +264,7 @@ window.addEventListener("load", async ()=>{
 
 	await faceapi.nets.tinyFaceDetector.loadFromUri("./face-api.js/weights");	
 
-	let fov = DEFAULT_FOV;
+	let Fov = DEFAULT_FOV;
 
 	clear_canvas(ctx, canvas);
 
@@ -269,30 +273,41 @@ window.addEventListener("load", async ()=>{
 	const eyes = new Eyes(ctx,canvas);
 	eyes.drawEyeBallAll();
 
-	
-	//let eye = new Eye(center,200,ctx,canvas);
-	//eye.drawEyeBall();
-
 	const eyeInfo = new EyeInfo(0,0);
 
 	async function draw_loop(timeStamp){	
-		const faces = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-		//const face = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
 
+		const face = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
 		eyes.clearIrisAll();
-
-		const n = faces.length;
-
-		if(n === 0){
-			//eyes.drawErrIrisAll();
+		if(face == undefined){
 			eyes.drawIrisAll(eyeInfo.theta);
+
 		}
-		else{
-			const face = faces[0];	
-			const theta = getTheta(face, fov,cameraDimention);
+		else{	
+			const theta = getTheta(face, Fov,cameraDimention);
 			eyes.drawIrisAll(theta);
 			eyeInfo.theta = theta;
 		}
+
+		/*
+		{
+			const faces = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+
+			eyes.clearIrisAll();
+
+			const n = faces.length;
+
+			if(n === 0){
+				eyes.drawIrisAll(eyeInfo.theta);
+			}
+			else{
+				const face = faces[0];	
+				const theta = getTheta(face, Fov,cameraDimention);
+				eyes.drawIrisAll(theta);
+				eyeInfo.theta = theta;
+			}
+		}
+		*/
 
 		window.requestAnimationFrame(draw_loop);
 	}
@@ -312,7 +327,63 @@ window.addEventListener("load", async ()=>{
 		eyes.updateSizeAll();
 	});
 
+	const modal = document.querySelector("dialog");
+	const methods = document.getElementsByName("fov_method");
+
+	const fovInput = document.querySelector("#fov_input");
+	const dfovInput = document.querySelector("#dfov_input");
+	const sizeInput = document.querySelector("#size_input");
+	const fInput = document.querySelector("#f_input");
+
+	const apply = document.querySelector("#apply");
+
+
 	canvas.addEventListener("click", ()=>{
+
+		fovInput.value = Fov*2;
+		dfovInput.value = (Fov*2*180)/Math.PI;
+		sizeInput.value = "";
+		fInput.value = "";
+
+
+		let tempFov = Fov;
+
+		modal.showModal();
+		
+		apply.addEventListener("click", ()=>{	
+			for(const method of methods){
+				if(method.checked){
+					if(method.value == "fov"){
+						if(fovInput.value == ""){
+							tempFov = Fov;
+						}else{
+							tempFov = fovInput.value/2;
+						}
+
+					}
+					else if(method.value == "dfov"){
+						if(fovInput.value == ""){
+							tempFov = Fov;
+						}
+						else {
+							tempFov = ((dfovInput.value/2)*Math.PI)/180;
+						}
+					}	
+					else if(method.value == "calc"){
+						if((sizeInput.value == "" )&& (fInput.value = "")){
+							tempFov = Fov;
+						}else{
+							tempFov = Math.atan((sizeInput.value/2)/fInput.value);
+						}
+					}
+				}
+
+			}
+
+			Fov = tempFov;
+
+		});
+
 	});
 	
 	//window.requestAnimationFrame(draw_loop);

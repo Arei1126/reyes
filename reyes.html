@@ -5,5 +5,58 @@
 		<img src="cross.svg" id="cross">
 		<script type="module" src="./face-api.js/dist/face-api.js"></script>
 		<script type="module" src="./reyes.js"></script>
+
+
+		<dialog>
+			<p>
+			<h2>Settings</h2>
+			<fieldset>
+				<legend>Choose FOV input type</legend>
+				<div>
+					<input type="radio" id="fov" name="fov_method" value="fov" checked />
+					<label for="fov">FOV (rad)</label>		
+
+					<input type="radio" id="fov" name="fov_method" value="dfov" />
+					<label for="fov">FOV (deg)</label>	
+
+					<input type="radio" id="calc" name="fov_method" value="calc" />
+					<label for="calc">Calculate by focal length (mm) and sensor diagonal length (mm)</label>
+
+				</div>
+			</fieldset>
+			<hr>
+			<div>	
+				<input type="number" id="fov_input" />
+				<label for="fov_input">FOV (rad)</label>	
+				<hr>
+				
+				<input type="number" id="dfov_input" />
+				<label for="dfov_input">FOV (degree)</label>	
+				<hr>
+				
+				<input type="number" id="f_input" />
+				<label for="f_input">Focal length (mm)</label>	
+				<input type="number" id="size_input" />
+				<label for="size_input">Sensor diagonal length (mm)</label>
+
+			</div>
+
+			<hr>
+			<div>
+				<button id="apply" name="but">Apply</button>
+				<hr>
+				<form method="dialog" name="but">
+					<button>Close</button>
+				</form>
+
+
+			</div>
+
+
+			</p>
+
+		</dialog>
+
+
 		</body>
 		</html>
