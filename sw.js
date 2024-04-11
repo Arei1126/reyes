@@ -1,4 +1,4 @@
-const VERSION = "0.1";
+const VERSION = "0.2";
 const CACHE_NAME = `reyes-${VERSION}`;
 
 const APP_STATIC_RESOURCES = [

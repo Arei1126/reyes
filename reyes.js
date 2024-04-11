@@ -23,6 +23,7 @@ const REF_ASPECT_WINDOW = 2/3;
 const REF_CANVAS_TO_SINGLE = 19/40;
 const REF_CANVAS_TO_DISTANCE = 2/40;
 
+let Trick_art_correction = TRICK_ART_CORRECTION;
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -67,7 +68,8 @@ class Eye{
 
 		let strech_x = 1;
 		let strech_y = 1;
-		if(TRICK_ART_CORRECTION){
+
+		if(Trick_art_correction){
 			strech_x = 1/Math.cos(this.theta.x);
 			strech_y = 1/Math.cos(this.theta.y);
 		}
@@ -348,6 +350,7 @@ window.addEventListener("load", async ()=>{
 
 	const apply = document.querySelector("#apply");
 
+	const trick = document.querySelector("#trick");
 
 	canvas.addEventListener("click", ()=>{
 
@@ -362,6 +365,8 @@ window.addEventListener("load", async ()=>{
 		modal.showModal();
 		
 		apply.addEventListener("click", ()=>{	
+			Trick_art_correction = trick.checked;
+
 			for(const method of methods){
 				if(method.checked){
 					if(method.value == "fov"){
