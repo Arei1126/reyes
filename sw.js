@@ -3,7 +3,7 @@ const CACHE_NAME = `reyes-${VERSION}`;
 
 const APP_STATIC_RESOURCES = [
 	"./manifest.json",
-	"./reyes.html",
+	"./index.html",
 	"./reyes.js",
 	"./reyes.css",
 	"./icon.png",
