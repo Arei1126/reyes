@@ -23,6 +23,9 @@ const REF_ASPECT_WINDOW = 2/3;
 const REF_CANVAS_TO_SINGLE = 19/40;
 const REF_CANVAS_TO_DISTANCE = 2/40;
 
+var PreviousTime = 0;
+var LoopThreshold = 0;
+
 let Trick_art_correction = TRICK_ART_CORRECTION;
 
 function delay(milliseconds) {
@@ -247,12 +250,12 @@ window.addEventListener("load", async ()=>{
 	video.autoplay = true;
 	document.body.appendChild(video);
 
-	const setting = stream.getTracks()[0].getSettings();
-	const cameraDimention = {width: setting.width, height: setting.height};
+	var setting = stream.getTracks()[0].getSettings();
+	var cameraDimention = {width: setting.width, height: setting.height};
 
 	//const cameraAspect = setting.aspectRatio;
-	const diagonal = Math.sqrt(Math.pow(cameraDimention.width,2) + Math.pow(cameraDimention.height,2));
-	const cameraRatioToDiagonal = new Vector(cameraDimention.width/diagonal,cameraDimention.height/diagonal,);
+	var diagonal = Math.sqrt(Math.pow(cameraDimention.width,2) + Math.pow(cameraDimention.height,2));
+	var cameraRatioToDiagonal = new Vector(cameraDimention.width/diagonal,cameraDimention.height/diagonal,);
 	
 	const canvas = document.createElement("canvas");
 
@@ -285,7 +288,14 @@ window.addEventListener("load", async ()=>{
 	const eyeInfo = new EyeInfo(0,0);
 
 	async function draw_loop(timeStamp){	
-
+		if(timeStamp - PreviousTime < LoopThreshold){
+			PreviousTime = timeStamp;
+			window.requestAnimationFrame(draw_loop);
+		}
+		else{
+			PreviousTime = timeStamp;
+		}
+				
 		const face = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
 
 		clear_canvas(ctx, canvas);
@@ -326,6 +336,13 @@ window.addEventListener("load", async ()=>{
 	}
 
 	window.addEventListener("resize", ()=>{	
+		setting = stream.getTracks()[0].getSettings();
+		cameraDimention = {width: setting.width, height: setting.height};
+
+		//const cameraAspect = setting.aspectRatio;
+		diagonal = Math.sqrt(Math.pow(cameraDimention.width,2) + Math.pow(cameraDimention.height,2));
+		cameraRatioToDiagonal = new Vector(cameraDimention.width/diagonal,cameraDimention.height/diagonal,);
+
 		const display_aspect = window.innerHeight/window.innerWidth;
 
 		if(display_aspect <=  REF_ASPECT_WINDOW){
